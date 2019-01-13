@@ -1,0 +1,27 @@
+version: '3'
+services:
+  mysql-service:
+    image: mysql:5.7.24
+    volumes:
+    - mysqldb:/var/lib/mysql
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: d3hard
+      MYSQL_USER: d3hard
+      MYSQL_PASSWORD: d3hard
+    ports:
+    - "3306:3306"
+  web-admin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      MYSQL_ROOT_PASSWORD: sec$ret
+      MYSQL_USER: d3hard
+      MYSQL_PASSWORD: d3hardPassword
+      PMA_HOST: mysql-service
+    ports:
+      - "22080:80"
+volumes:
+  mysqldb:
+
+

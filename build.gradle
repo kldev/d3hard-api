@@ -1,0 +1,89 @@
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
+buildscript {
+    ext{
+
+    }
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+
+
+    }
+    dependencies {
+        classpath('gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0')
+    }
+}
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
+}
+group 'com.kldev'
+version '1.0.0'
+description 'D3Hard forum web API'
+
+sourceCompatibility = 1.8
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'com.palantir.docker'
+
+repositories {
+    mavenCentral()   
+}
+
+mainClassName = 'com.kldev.d3.Main'
+
+dependencies {
+    compile 'io.dropwizard:dropwizard-core:1.3.7'
+    compile group: 'io.dropwizard', name: 'dropwizard-hibernate', version: '1.3.7'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
+    compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.12.0'
+
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3.2'
+
+}
+
+
+
+shadowJar {
+    doFirst {
+        copy {
+            from 'src/main/config.yml'
+            into './build/libs/'
+        }
+    }
+
+    mergeServiceFiles()
+    exclude 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.SF'
+    manifest {
+        attributes 'Implementation-Title': rootProject.name
+        attributes 'Implementation-Version': rootProject.version
+        attributes 'Implementation-Vendor-Id': rootProject.group
+        attributes 'Build-Time': ZonedDateTime.now(ZoneId.of("UTC"))
+                .format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+        attributes 'Built-By': InetAddress.localHost.hostName
+        attributes 'Created-By': 'Gradle ' + gradle.gradleVersion
+        attributes 'Main-Class': mainClassName
+    }
+    archiveName 'app.jar'
+}
+
+
+run {
+    args = ['server', 'config.yml']
+}
+
+docker {
+    dependsOn shadowJar
+    name "d3hard"
+    files shadowJar.archivePath, "src/main/config.yml"
+    buildArgs(['JAR_FILE': "app.jar"])
+}
