@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class UpdateAllCommand extends Command {
@@ -65,7 +66,7 @@ public class UpdateAllCommand extends Command {
 
         Statement stmt = null;
         ResultSet rs = null;
-        Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+        Class.forName("org.postgresql.Driver").newInstance();
 
 
 
@@ -95,11 +96,11 @@ public class UpdateAllCommand extends Command {
 
 
         logAndPrint("Loaded ranks:" + list.size());
-       // updatePlayerRanks(jdbc, list, url);
+        updatePlayerRanks(jdbc, list, url);
 
 
 
-        logAndPrint("Update heroes postion");
+        logAndPrint("Update heroes position");
 
         List<String> leaderboardTypes = Arrays.asList(
                 LeaderboardTypes.RiffHardcoreBarbarian,
@@ -153,27 +154,16 @@ public class UpdateAllCommand extends Command {
                     .readTimeout(Duration.ofHours(1)).build();
 
 
-            int i = 1;
-            for (CreateRankRequest rankRequest: list)
-            {
-                StopWatch stopWatch = new StopWatch();
-                stopWatch.start();
+            AtomicInteger i = new AtomicInteger(1);
 
-
-                int j= 0;
-                int responseCode = 0;
-                while (j < 10){
-                    responseCode = sendUpdate(rankRequest, url);
-                    if ( responseCode != -1) break;
-
-                    Thread.sleep(5*1000);
-                    j++;
+            list.stream().parallel().forEach(rankRequest -> {
+                try {
+                    updatePlayerRank(rankRequest, url, i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+            });
 
-                stopWatch.stop();
-                logAndPrint("Update [" + i++ +"]: " + rankRequest.getbTag() + " has ended with code - " + responseCode + " in " + stopWatch.getTime(TimeUnit.SECONDS) +  " .s ");
-
-            }
 
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
@@ -192,10 +182,32 @@ public class UpdateAllCommand extends Command {
     }
 
     @SuppressWarnings("Duplicates")
+    private void updatePlayerRank(CreateRankRequest rankRequest, String url, AtomicInteger i ) throws InterruptedException
+    {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+
+        int j= 0;
+        int responseCode = 0;
+        while (j < 10){
+            responseCode = sendUpdate(rankRequest, url);
+            if ( responseCode != -1) break;
+
+            Thread.sleep(5*1000);
+            j++;
+        }
+
+        stopWatch.stop();
+        logAndPrint("Update [" + i.getAndIncrement() +"]: " + rankRequest.getbTag() + " has ended with code - " + responseCode + " in " + stopWatch.getTime(TimeUnit.SECONDS) +  " .s ");
+    }
+
+
+    @SuppressWarnings("Duplicates")
     private int getMaxSeason(String jdbc) throws Exception {
         Statement stmt = null;
         ResultSet rs = null;
-        Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+        Class.forName("org.postgresql.Driver").newInstance();
 
         Connection conn =
                 DriverManager.getConnection(jdbc);
@@ -259,6 +271,7 @@ public class UpdateAllCommand extends Command {
         catch (java.io.IOException io){
             return -1;
         }
+
 
 
     }

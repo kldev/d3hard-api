@@ -19,6 +19,7 @@ import java.sql.Statement;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ImportFromForumCommand extends Command {
 
@@ -91,31 +92,16 @@ public class ImportFromForumCommand extends Command {
         {
 
 
+            AtomicInteger i = new AtomicInteger(1);
 
-            int i = 1;
 
-            for (String btag: btags)
-            {
-                StopWatch stopWatch = new StopWatch();
-                stopWatch.start();
-
-                int j= 0;
-                int responseCode = 0;
-                while (j < 10){
-                    responseCode = sendUpdate(btag, url);
-                    if ( responseCode != -1) break;
-
-                    Thread.sleep(5*1000);
-                    j++;
+            btags.stream().parallel().forEach(k -> {
+                try {
+                    importAccount(url, k, i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-
-                stopWatch.stop();
-
-                logAndPrint("Import [" + i++ +"]: "  + btag + " has ended with code - " + responseCode + " in " + stopWatch.getTime(TimeUnit.SECONDS) +  " .s ");
-
-            }
-
-
+            });
 
             StopWatch stopWatch = new StopWatch();
             stopWatch.start();
@@ -136,9 +122,31 @@ public class ImportFromForumCommand extends Command {
         }
 
 
-
-
     }
+
+    @SuppressWarnings("Duplicates")
+    private void importAccount(String url, String btag, AtomicInteger i) throws InterruptedException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        int j= 0;
+        int responseCode = 0;
+        while (j < 10){
+            responseCode = sendUpdate(btag, url);
+            if ( responseCode != -1) break;
+
+
+            Thread.sleep(5*1000);
+
+
+            j++;
+        }
+
+        stopWatch.stop();
+
+        logAndPrint("Import [" + i.getAndIncrement() +"]: "  + btag + " has ended with code - " + responseCode + " in " + stopWatch.getTime(TimeUnit.SECONDS) +  " .s ");
+    }
+
 
     @SuppressWarnings("Duplicates")
     private int sendUpdate(String btag, String url)

@@ -2,18 +2,23 @@ package com.kldev.d3.service;
 
 import com.kldev.d3.blizzard.BlizzardClient;
 import com.kldev.d3.blizzard.constant.LeaderboardTypes;
-import com.kldev.d3.blizzard.model.*;
+import com.kldev.d3.blizzard.model.LeaderboardItem;
+import com.kldev.d3.blizzard.model.PlayerAccount;
+import com.kldev.d3.blizzard.model.Season;
+import com.kldev.d3.blizzard.model.SeasonalProfiles;
 import com.kldev.d3.configuration.BlizardConfig;
 import com.kldev.d3.controller.model.*;
 import com.kldev.d3.storage.*;
-import com.kldev.d3.storage.dao.*;
+import com.kldev.d3.storage.dao.HeroRankSeasonalDao;
+import com.kldev.d3.storage.dao.PlayerRankDao;
+import com.kldev.d3.storage.dao.PlayerRankSeasonalDao;
+import com.kldev.d3.storage.dao.RankSeasonDao;
 import com.kldev.d3.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -142,7 +147,12 @@ public class RankService {
 
         if (rankSeasonDao.findBySeason(currentSeason) == null)
         {
-            rankSeasonDao.add(new RankSeason(currentSeason));
+            try {
+                rankSeasonDao.add(new RankSeason(currentSeason));
+            }
+            catch (Exception ex) {
+                logger.debug(ex.getMessage());
+            }
         }
 
     }
@@ -154,7 +164,7 @@ public class RankService {
         if (rank == null) {
 
             processNewRank(account, request);
-            rank = playerRankDao.findByBtag(request.getbTag());
+            rank = playerRankDao.findByBtag(account.getBattleTag());
         }
         else{
             updateRank(rank, account);

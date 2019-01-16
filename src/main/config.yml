@@ -16,22 +16,16 @@ blizard:
   clientSecret:  ${D3_CLIENT_SECRET:-CLIENT_SECRET}           # use D3_CLIENT_SECRET ENV OR VALUE (- not part of VALUE)
 
 database:
-  driverClass: com.mysql.cj.jdbc.Driver   
-  user: ${DB_USER:-d3hard}                                     # use DB_USER ENV OR VALUE (- not part of VALUE)
-  password: ${DB_PASSWORD:-d3hard}                             # use DB_PASSWORD ENV OR VALUE (- not part of VALUE)
-  url: ${DB_URL:-jdbc:mysql://mysql-service:3306/d3hard?useSSL=false}
+  driverClass: org.postgresql.Driver
+  user: ${DB_USER:-d3hard}
+  password: ${DB_PASSWORD:-d3hard}
+  url: ${DB_URL:-jdbc:postgresql://postgres-service:5432/d3hard}
   properties:
     charSet: UTF-8
-    hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate.dialect:  org.hibernate.dialect.PostgreSQL95Dialect
     hibernate.hbm2ddl.auto: update
 
   validationQuery: "SELECT now()"
-  # the minimum number of connections to keep open
-  minSize: 4
-  initialSize: 4
-
-  # the maximum number of connections to keep open
-  maxSize: 8
 
   # whether or not idle connections should be validated
   checkConnectionWhileIdle: false

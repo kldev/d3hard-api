@@ -21,18 +21,6 @@ public class PlayerRankSeasonalDao extends AbstractDAO<PlayerRankSeasonal> {
         super(factory);
     }
 
-    /*
-    public void deleteAllByBtag(String btag)
-    {
-        Query query =   this.currentSession().createQuery("DELETE FROM PlayerRankSeasonal WHERE btag = :btag"); // untyped query
-        query.setParameter("btag", btag);
-
-        query.executeUpdate();
-
-    }
-*/
-
-
     public int getMinSeason()
     {
         Query query = this.currentSession().createQuery("SELECT min(season) FROM PlayerRankSeasonal WHERE season > 0");
