@@ -1,36 +1,30 @@
 version: '3'
 services:
-  mysql-service:
-    image: mysql:5.7.24
+  postgres-service:
+    image: postgres:9.6
     volumes:
-    - mysqldb:/var/lib/mysql
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+      - pddata:/var/lib/postgresql/data
     environment:
-      MYSQL_ROOT_PASSWORD: TAeKOHIWzoAHdAmacB
-      MYSQL_DATABASE: d3hard
-      MYSQL_USER: d3hard
-      MYSQL_PASSWORD: H5pAuqmpB8XGTeeAgs
-    ports:
-    - "3306:3306"
-  web-admin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      MYSQL_ROOT_PASSWORD: TAeKOHIWzoAHdAmacB
-      MYSQL_USER: d3hard
-      MYSQL_PASSWORD: H5pAuqmpB8XGTeeAgs
-      PMA_HOST: mysql-service
-    ports:
-    - "22080:80"
+      POSTGRES_DB: d3hard
+      POSTGRES_USER: d3hard
+      POSTGRES_PASSWORD: d3hard
   d3hard:
     image: d3hard
     ports:
     - 9000:9000
     environment:
-      D3_CLIENT_ID: YOUR_DIABLO_API_CLIENT_ID
-      D3_CLIENT_SECRET: YOUR_DIABLO_API_SECRET
       DB_USER: d3hard
       DB_PASSWORD: H5pAuqmpB8XGTeeAgs
-      DB_URL: jdbc:mysql://mysql-service:3306/d3hard?useSSL=false
+      DB_URL: jdbc:postgresql://postgres-service:5432/d3hard
+      D3_CLIENT_ID: YOUR_CLIENT_ID
+      D3_CLIENT_SECRET: YOUR_CLIENT_SECRET
+  d3web:
+    image: d3web
+    ports:
+      - 80:80
+    extra_hosts:
+      - "d3env-d3hard:172.17.0.1"
+
 volumes:
   mysqldb:
 
